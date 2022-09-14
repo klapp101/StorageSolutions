@@ -25,7 +25,7 @@
 
 # Running the file:
 1. Open up CMD
-2. Type “cd Desktop”
-3. Type “cd StorageSolutions”
-4. Type “python index.py”
+2. Type `cd Desktop`
+3. Type `cd StorageSolutions`
+4. Type `python index.py`
 5. The script will take about 3 minutes to run, you’re all set!

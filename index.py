@@ -127,6 +127,8 @@ class StorageSolutionsData:
         xml_parse = xmltodict.parse(url.text)
         xml_response = xml_parse['resp']['out']['reellist']['reelinfo']
         df = pd.DataFrame(xml_response)
+        df[['adddate', 'adduser']] = df['add'].str.split(',', 1, expand=True)
+        df.drop('add',inplace=True,axis=1)
         df.reset_index(drop=True, inplace=True)
         df.to_sql('ReelInfo', engine, if_exists='replace',schema='juki')
         print('ReelInfo Pushed!')

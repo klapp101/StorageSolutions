@@ -87,14 +87,13 @@ class StorageSolutionsData:
                     cols.append(column)
                 df_concat.columns = cols
 
-                df_concat = df_concat.drop(['filter','priority','supplier_2'], axis=1)
-                df_concat.rename(columns={'supplier_1':'supplier'},inplace=True)
+                df_concat = df_concat.drop(['filter','consignment'], axis=1)
+                df_concat.rename(columns={'supplier_1':'supplier','supplier_2':'ConsignmentSupplier','priority':'ConsignmentPriority'},inplace=True)
                 board_items.append(df_concat)
             except:
                 faulty_format.append(series['id'])
         final_board = pd.concat(board_items)
         final_board.reset_index(drop=True, inplace=True)
-        final_board['consignment'] = final_board['consignment'].astype('str')
         final_board.to_sql('BoardItem', engine, if_exists='replace',schema='juki')
         print('BoardItem Pushed!')
 

@@ -61,40 +61,72 @@ class StorageSolutionsData:
 
     def get_board_items(self):
         board_items = []
+        alternative_board_items = []
         faulty_format = []
         for i,series in self.df_for_items.iterrows():
             try:
                 df_board_item = pd.DataFrame(series['items']['boarditem'])
-                df_filter = df_board_item['filter'].apply(pd.Series)
-                df_consignment = df_board_item['consignment'].apply(pd.Series)
-                board_id = pd.Series(series['id'])
-                df_concat = pd.concat([board_id,df_board_item, df_filter,df_consignment], axis=1)
-                df_concat.rename(columns={0:'board_id'},inplace=True)
-                df_concat['board_id'] = pd.to_numeric(df_concat['board_id'], errors='coerce')
-                
-                # https://stackoverflow.com/questions/65263207/valueerror-repeats-may-not-contain-negative-values
-                df_concat = df_concat.ffill()
-                
-                # handling 2 supplier columns
+                if(len(df_board_item.alternativeitems.value_counts()) > 0) == False:
+                    df_filter = df_board_item['filter'].apply(pd.Series)
+                    df_consignment = df_board_item['consignment'].apply(pd.Series)
+                    board_id = pd.Series(series['id'])
+                    df_concat = pd.concat([board_id,df_board_item, df_filter,df_consignment], axis=1)
+                    df_concat.rename(columns={0:'board_id'},inplace=True)
+                    df_concat['board_id'] = pd.to_numeric(df_concat['board_id'], errors='coerce')
+                    
+                    # https://stackoverflow.com/questions/65263207/valueerror-repeats-may-not-contain-negative-values
+                    df_concat = df_concat.ffill()
+                    
+                    # handling 2 supplier columns
 
-                cols = []
-                count = 1
-                for column in df_concat.columns:
-                    if column == 'supplier':
-                        cols.append(f'supplier_{count}')
-                        count+=1
-                        continue
-                    cols.append(column)
-                df_concat.columns = cols
+                    cols = []
+                    count = 1
+                    for column in df_concat.columns:
+                        if column == 'supplier':
+                            cols.append(f'supplier_{count}')
+                            count+=1
+                            continue
+                        cols.append(column)
+                    df_concat.columns = cols
 
-                df_concat = df_concat.drop(['filter','consignment'], axis=1)
-                df_concat.rename(columns={'supplier_1':'supplier','supplier_2':'ConsignmentSupplier','priority':'ConsignmentPriority'},inplace=True)
-                board_items.append(df_concat)
+                    df_concat = df_concat.drop(['filter','consignment'], axis=1)
+                    df_concat.rename(columns={'supplier_1':'supplier','supplier_2':'ConsignmentSupplier','priority':'ConsignmentPriority'},inplace=True)
+                    board_items.append(df_concat)
+                else:
+                    df_board_item_alternative = pd.DataFrame(series['items']['boarditem']['alternativeitems']['alternativeitem'])
+                    df_board_item_alternative_filter = df_board_item_alternative['filter'].apply(pd.Series)
+                    df_board_item_alternative_consignment = pd.DataFrame(series['items']['boarditem']['consignment'],index=[0])
+                    board_id_alternative = pd.Series(series['id'])
+                    df_concat_alternative = pd.concat([board_id_alternative,df_board_item_alternative,df_board_item_alternative_filter,df_board_item_alternative_consignment], axis=1)
+                    df_concat_alternative.rename(columns={0:'board_id'},inplace=True)
+                    df_concat_alternative['board_id'] = pd.to_numeric(df_concat_alternative['board_id'], errors='coerce')
+
+                    df_concat_alternative = df_concat_alternative.ffill()
+
+                    cols = []
+                    count = 1
+                    for column in df_concat_alternative.columns:
+                        if column == 'supplier':
+                            cols.append(f'supplier_{count}')
+                            count+=1
+                            continue
+                        cols.append(column)
+                    df_concat_alternative.columns = cols
+
+                    df_concat_alternative = df_concat_alternative.drop(['filter','priority','supplier_2'], axis=1)
+                    df_concat_alternative.rename(columns={'supplier_1':'supplier','id':'itemid','code':'itemcode'},inplace=True)
+                    df_concat_alternative['OrderPref'] = np.arange(df_concat_alternative.shape[0])
+                    df_concat_alternative = df_concat_alternative[['board_id','itemid','itemcode','OrderPref','supplier','mpn','manufacturer']]
+                    alternative_board_items.append(df_concat_alternative)
             except:
                 faulty_format.append(series['id'])
         final_board = pd.concat(board_items)
         final_board.reset_index(drop=True, inplace=True)
         final_board.to_sql('BoardItem', engine, if_exists='replace',schema='juki')
+
+        final_board_alternative = pd.concat(alternative_board_items)
+        final_board_alternative.reset_index(drop=True, inplace=True)
+        final_board_alternative.to_sql('BoardAlternativeItems', engine, if_exists='replace',schema='juki')
         print('BoardItem Pushed!')
 
 

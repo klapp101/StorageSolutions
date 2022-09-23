@@ -123,11 +123,12 @@ class StorageSolutionsData:
         final_board = pd.concat(board_items)
         final_board.reset_index(drop=True, inplace=True)
         final_board.to_sql('BoardItem', engine, if_exists='replace',schema='juki')
+        print('BoardItem Pushed!')
 
         final_board_alternative = pd.concat(alternative_board_items)
         final_board_alternative.reset_index(drop=True, inplace=True)
         final_board_alternative.to_sql('BoardAlternativeItems', engine, if_exists='replace',schema='juki')
-        print('BoardItem Pushed!')
+        print('BoardAlternativeItmes Pushed!')
 
 
     def get_item_info(self):

@@ -26,8 +26,6 @@ r'Trusted_Connection=yes;' )
 engine = create_engine("mssql+pyodbc:///?odbc_connect=%s" % conn_str, fast_executemany=True)
 conn = engine.connect()
 
-# https://stackoverflow.com/questions/6473925/sqlalchemy-getting-a-list-of-tables
-
 class StorageSolutionsData:
     def __init__(self):
         pass

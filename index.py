@@ -1,5 +1,6 @@
 import requests
 import pandas as pd
+import numpy as np
 import xml.etree.ElementTree as ET
 import xmltodict
 import pyodbc
@@ -25,30 +26,32 @@ r'Trusted_Connection=yes;' )
 engine = create_engine("mssql+pyodbc:///?odbc_connect=%s" % conn_str, fast_executemany=True)
 conn = engine.connect()
 
+# https://stackoverflow.com/questions/6473925/sqlalchemy-getting-a-list-of-tables
+
 class StorageSolutionsData:
     def __init__(self):
         pass
     def get_token(self):
         data = {
             'f': 'login',
-            'username': 'username',
-            'password': 'password'
+            'username': 'user',
+            'password': 'pw'
         }
 
-        url = 'http://localhost/?'
+        url = 'localhost'
         url = requests.get(url,params=data)
         xml_parse = xmltodict.parse(url.text)
         self.api_token = xml_parse['resp']['out']['token']
         print('API Token Received!')
 
     def get_board_list(self):
-        # http://localhost/#FuncPosboard_getlist
+        # localhost#FuncPosboard_getlist
         data = {
             'f': 'board_getlist',
             'tkn': self.api_token
         }
 
-        url_item_list = f'http://localhost/?'
+        url_item_list = f'localhost'
         url = requests.get(url_item_list,params=data)
         xml_parse = xmltodict.parse(url.text)
         xml_response = xml_parse['resp']['out']['boardlist']['boardinfo']
@@ -130,15 +133,14 @@ class StorageSolutionsData:
         final_board_alternative.to_sql('BoardAlternativeItems', engine, if_exists='replace',schema='juki')
         print('BoardAlternativeItmes Pushed!')
 
-
     def get_item_info(self):
-        # http://localhost/#FuncPositem_getlist
+        # localhost#FuncPositem_getlist
         data = {
             'f': 'item_getlist',
             'tkn': self.api_token
         }
 
-        url_item_list = f'http://localhost/?'
+        url_item_list = f'localhost'
         url = requests.get(url_item_list,params=data)
         xml_parse = xmltodict.parse(url.text)
         xml_response = xml_parse['resp']['out']['itemlist']['iteminfo']
@@ -148,13 +150,13 @@ class StorageSolutionsData:
         print('ItemInfo Pushed!')
 
     def get_reel_info(self):
-        # http://localhost/#FuncPosreel_getlist
+        # localhost#FuncPosreel_getlist
         data = {
             'f': 'reel_getlist',
             'tkn': self.api_token
         }
 
-        url_item_list = f'http://localhost/?'
+        url_item_list = f'localhost'
         url = requests.get(url_item_list,params=data)
         xml_parse = xmltodict.parse(url.text)
         xml_response = xml_parse['resp']['out']['reellist']['reelinfo']
@@ -166,21 +168,21 @@ class StorageSolutionsData:
         print('ReelInfo Pushed!')
 
     def get_session_list(self):
-        # http://localhost/#FuncPossession_getlist
+        # localhost#FuncPossession_getlist
 
         data = {
             'f': 'session_getlist',
             'tkn': self.api_token
         }
 
-        url_item_list = f'http://localhost/?'
+        url_item_list = f'localhost'
         url = requests.get(url_item_list,params=data)
         xml_parse = xmltodict.parse(url.text)
         xml_response = xml_parse['resp']['out']['sessions']['sessioninfo']
         self.session_list_df = pd.DataFrame(xml_response)
 
     def get_session_boards(self):
-        # http://localhost/#FuncPossession_getboards
+        # localhost#FuncPossession_getboards
 
         session_boards = []
         no_session_boards = []
@@ -192,7 +194,7 @@ class StorageSolutionsData:
                 'id': i
             }
 
-            url_item_list = f'http://localhost/?'
+            url_item_list = f'localhost'
             url = requests.get(url_item_list,params=data)
             xml_parse = xmltodict.parse(url.text)
             try:     
@@ -211,7 +213,7 @@ class StorageSolutionsData:
         print('SessionBoard Pushed!')
 
     def get_session_info(self):
-        # http://localhost/#FuncPossession_getinfo
+        # localhost#FuncPossession_getinfo
         
         session_info = []
         no_session_info = []
@@ -223,7 +225,7 @@ class StorageSolutionsData:
                 'id': i
             }
 
-            url_item_list = f'http://localhost/?'
+            url_item_list = f'localhost'
             url = requests.get(url_item_list,params=data)
             xml_parse = xmltodict.parse(url.text)
             try:
@@ -239,7 +241,7 @@ class StorageSolutionsData:
         print('SessionInfo Pushed!')
 
     def get_session_items(self):
-        # http://localhost/#FuncPossession_getitems
+        # localhost#FuncPossession_getitems
         session_items = []
         no_session_items = []
 
@@ -250,7 +252,7 @@ class StorageSolutionsData:
                 'id': i
             }
 
-            url_item_list = f'http://localhost/?'
+            url_item_list = f'localhost'
             url = requests.get(url_item_list,params=data)
             xml_parse = xmltodict.parse(url.text)
             try:
@@ -274,7 +276,7 @@ class StorageSolutionsData:
         print('SessionItem Pushed!')
 
     def get_session_reels(self):
-        # http://localhost/#FuncPossession_getreels
+        # localhost#FuncPossession_getreels
         
         session_reels = []
         no_sessions = []
@@ -285,7 +287,7 @@ class StorageSolutionsData:
                 'id': i
             }
 
-            url_item_list = f'http://localhost/?'
+            url_item_list = f'localhost'
             url = requests.get(url_item_list,params=data)
             xml_parse = xmltodict.parse(url.text)
             try:
@@ -303,7 +305,6 @@ class StorageSolutionsData:
         final_session_reels.to_sql('SessionReel', engine, if_exists='replace',schema='juki')
         print('SessionReel Pushed!')
         conn.close()
-
 
 s = StorageSolutionsData()
 s.get_token()
